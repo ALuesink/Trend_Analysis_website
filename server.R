@@ -7,6 +7,9 @@ function(input, output, session){
   options(shiny.sanitize.errors = TRUE)
   cols_sequencer <- c("hiseq_umc01" = "#009E73", "nextseq_umc01" = "#0072B2", "nextseq_umc02" = "#D55E00")
   cols_lanes <- c("1" = "darkred", "2" = "darkgoldenrod2", "3" = "navyblue", "4" = "cyan3")
+  # shape_sequencer <- c("hiseq_umc01" = 0, "nextseq_umc01" = 1, "nextseq_umc02" = 4)
+  shape_sequencer <- c("hiseq_umc01" = 15, "nextseq_umc01" = 19, "nextseq_umc02" = 17)
+  
   
   query_sample_seq <- function(x, y, date_min, date_max){
     con <- dbConnect(RMySQL::MySQL(), group="trendngs")
@@ -19,7 +22,7 @@ function(input, output, session){
   }
   query_run_lane <- function(x, y, date_min, date_max){
     con <- dbConnect(RMySQL::MySQL(), group="trendngs")
-    query <- sprintf("SELECT %s, %s, Sequencer FROM Run JOIN Run_per_Lane ON Run.Run_ID = Run_per_Lane.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x, y, date_min, date_max)
+    query <- sprintf("SELECT %s, %s, Sequencer, Lane FROM Run JOIN Run_per_Lane ON Run.Run_ID = Run_per_Lane.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x, y, date_min, date_max)
     response <- dbSendQuery(con, query)
     results <- dbFetch(response, n=-1)
     dbClearResult(response)
@@ -69,7 +72,12 @@ function(input, output, session){
     day_max <- as.numeric(input$date_input1[2])
     sub_data <- query_sample_seq(x_var,y_var,day_min,day_max)
     sub_data <- subset(sub_data, Sequencer %in% input$sequencer1)
-    ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=1, aes(colour=Sequencer)) + stat_summary(fun.y="mean", colour="black", size=3, geom="point") + geom_smooth(aes(group=Sequencer, colour=Sequencer), method="loess") + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges1$x, ylim = ranges1$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
+    cuttoff <- data.frame(x = c(-Inf, Inf), y= 80, cuttoff = factor(80))
+    if(y_var == "PCT_Q30_bases"){
+      ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=1, aes(colour=Sequencer)) + geom_hline(aes(yintercept = 80, linetype = "Q30"), colour = "black", size=1)  + stat_summary(fun.y="mean", colour="black", size=3, geom="point") + geom_smooth(aes(group=Sequencer, colour=Sequencer), method="loess") + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges1$x, ylim = ranges1$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA))) + scale_linetype_manual(name = "Cut-off", values = c(1,1), guide = guide_legend(override.aes = list(colour = c("black"))))
+    }else{
+      ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=1, aes(colour=Sequencer)) + stat_summary(fun.y="mean", colour="black", size=3, geom="point") + geom_smooth(aes(group=Sequencer, colour=Sequencer), method="loess") + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges1$x, ylim = ranges1$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
+    }
   }
   output$Run_Q30 <- renderPlot({
     plot_sample_seq("Run", "PCT_Q30_bases", "Percentage Q30", "Percentage Q30")
@@ -119,12 +127,11 @@ function(input, output, session){
   })
   
   boxplot_lane_run <- function(x_var, y_var, titel, y_lab){
-    str(input$lane_brush)
     day_min <- as.numeric(input$date_input2[1])
     day_max <- as.numeric(input$date_input2[2])
     sub_data <- query_run_lane(x_var, y_var, day_min, day_max)
     sub_data <- subset(sub_data, Sequencer %in% input$sequencer2& Lane %in% input$lanes)
-    ggplot(sub_data, aes_string(x=x_var, y=y_var, fill="Sequencer", colour="Sequencer")) + geom_boxplot(alpha=.5, outlier.colour = NA, position = position_dodge(width = .8)) + geom_point(position = position_jitterdodge(jitter.width=.15, dodge.width = .8)) + scale_fill_manual(name = "Sequencer", values = cols_sequencer) + theme(axis.text.x=element_text(hjust=1, vjust=1), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + ggtitle(titel) + coord_cartesian(xlim = ranges2$x, ylim = ranges2$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
+    ggplot(sub_data, aes_string(x=x_var, y=y_var, fill="Sequencer", colour="Sequencer")) + geom_boxplot(alpha=.5, outlier.colour = NA, position = position_dodge(width = .8)) + geom_point(position = position_jitterdodge(jitter.width=.15, dodge.width = .8)) + scale_fill_manual(name = "Sequencer", values = cols_sequencer) + theme(axis.text.x=element_text(hjust=1, vjust=1), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + ggtitle(titel) + coord_cartesian(xlim = ranges2$x, ylim = ranges2$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
   }
   output$Lane_Q30 <- renderPlot({
     boxplot_lane_run("Lane", "PCT_Q30_bases", "Percentage Q30 per Lane", "Percentage Q30")
@@ -133,12 +140,27 @@ function(input, output, session){
     boxplot_lane_run("Lane", "Mean_Quality_Score", "Mean Quality Score per Lane", "Mean Quality Score")
   })
   
+  plot_lane_run <- function(x_var, y_var, titel, y_lab){
+    day_min <- as.numeric(input$date_input2[1])
+    day_max <- as.numeric(input$date_input2[2])
+    sub_data <- query_run_lane(x_var, y_var, day_min, day_max)
+    sub_data <- subset(sub_data, Sequencer %in% input$sequencer2& Lane %in% input$lanes)
+    # print(sub_data)
+    ggplot(sub_data, aes_string(x=x_var, y=y_var, group=x_var)) + geom_point(aes(colour = Lane, shape= Sequencer), size=3) + geom_smooth(aes(group = Lane, colour = Lane), method = "loess", se=FALSE)  + scale_colour_manual(name = "Lanes", labels = input$lanes, values = cols_lanes) + scale_shape_manual(name= "Sequencer", values = shape_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA))) + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18))
+  }
+  output$Lane_Q30_line <- renderPlot({
+    plot_lane_run("Run", "PCT_Q30_bases", "Percentage Q30 per lane", "Percentage Q30")
+  })
+  output$Lane_MQS_line <- renderPlot({
+    plot_lane_run("Run", "Mean_Quality_Score", "Mean Quality Score per Lane", "Mean Quality Score")
+  })
+  
   plot_sample_proc <- function(x_var,y_var,titel,y_lab){
     day_min <- as.numeric(input$date_input3[1])
     day_max <- as.numeric(input$date_input3[2])
     sub_data <- query_sample_proc(x_var,y_var,day_min,day_max)
     sub_data <- subset(sub_data, Sequencer %in% input$sequencer3)
-    ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=1, aes(colour=Sequencer)) + geom_smooth(aes(group=Sequencer, colour=Sequencer)) + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges3$x, ylim = ranges3$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
+    ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=1, aes(colour=Sequencer)) + geom_smooth(aes(group=Sequencer, colour=Sequencer)) + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges3$x, ylim = ranges3$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
   }
   output$Proc_dup <- renderPlot({
     plot_sample_proc("Run", "Duplication","Duplication","Percentage Duplication")
@@ -283,5 +305,5 @@ function(input, output, session){
     }
   })
   
-  session$onSessionEnded(stopApp)
+  # session$onSessionEnded(stopApp)
 }

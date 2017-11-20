@@ -78,11 +78,11 @@ shinyUI(
               ),
            mainPanel(
              tabsetPanel(
-               tabPanel("Percentage \u2265 Q30",
-                        plotOutput("Lane_Q30", width = "1250px", height = "750px", dblclick = "lane_dblclick", brush = brushOpts(id = "lane_brush", resetOnNew = TRUE))
+               tabPanel("Percentage Q30 per Lane",
+                        plotOutput("Lane_Q30_line", width = "1250px", height = "750px", dblclick = "lane_dblclick", brush = brushOpts(id = "lane_brush", resetOnNew = TRUE))
                 ),
-                tabPanel("Mean Quality Score",
-                         plotOutput("Lane_MQS", width = "1250px", height = "750px", dblclick = "lane_dblclick", brush = brushOpts(id = "lane_brush", resetOnNew = TRUE))
+               tabPanel("Mean Quality Score per Lane",
+                        plotOutput("Lane_MQS_line", width = "1250px", height = "750px", dblclick = "lane_dblclick", brush = brushOpts(id = "lane_brush", resetOnNew = TRUE))
                 )
               )
             )
