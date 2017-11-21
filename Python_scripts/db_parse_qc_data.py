@@ -23,6 +23,7 @@ wkdir = "/hpc/cog_bioinf/diagnostiek/raw_data/"
 if keuze == "db":
 	### Database connectie, tabellen "maken" en sequencers die al in de database staan ophalen 
 	metadata = MetaData()
+#	engine = create_engine("mysql+pymysql://trendngs:-@wgs11.op.umcutrecht.nl/trendngs")
 	engine = create_engine("mysql+pymysql://"+config.MySQL_DB["username"]+":"+config.MySQL_DB["password"]+"@"+config.MySQL_DB["host"]+"/"+config.MySQL_DB["database"], echo=False)
 
 	conn = engine.connect()
@@ -83,7 +84,9 @@ if keuze == "db":
 				
 					run_stats = lane_tables[1][1]
 					run_stats = [convert_numbers(item.replace(",","")) for item in run_stats]
-					insert_Run = Run.insert().values(Run=str(run), Cluster_Raw=run_stats[0], Cluster_PF=run_stats[1], Yield_Mbases=run_stats[2], Seq_ID=seq_id, Sequencer=sequencer, Date=date, asDate=as_Date)
+					PCT_PF = (float(run_stats[1])/run_stats[0])*100
+					PCT_PF = float("{0:.2f}".format(PCT_PF))
+					insert_Run = Run.insert().values(Run=str(run), Cluster_Raw=run_stats[0], Cluster_PF=run_stats[1], Yield_Mbases=run_stats[2], Seq_ID=seq_id, Sequencer=sequencer, Date=date, asDate=as_Date, PCT_PF_Cluster=PCT_PF)
 					con_Run = conn.execute(insert_Run)
 					run_id = con_Run.inserted_primary_key
 				

@@ -3,9 +3,9 @@ library(shinythemes)
 
 sequencers <- c("hiseq_umc01", "nextseq_umc01", "nextseq_umc02")
 lanes <- c(1,2,3,4)
-columns_Processed <- c("Sample_name","Total_number_of_reads","Percentage_reads_mapped","Total_reads","PF_reads","PF_unique_reads","PCT_PF_reads","PCT_PF_UQ_reads","PCT_UQ_reads_aligned",'PCT_PF_UQ_reads_aligned',"PF_UQ_bases_aligned","On_bait_bases","Near_bait_bases","Off_bait_bases","On_target_bases","PCT_selected_bases","PCT_off_bait","On_bait_vs_selected","Mean_bait_coverage","Mean_target_coverage","PCT_usable_bases_on_bait","PCT_usable_bases_on_target","Fold_enrichment","Zero_CVG_targets_PCT","Fold_80_base_penalty","PCT_target_bases_2X","PCT_target_bases_10X","PCT_target_bases_20X","PCT_target_bases_30X","PCT_target_bases_40X","PCT_target_bases_50X","PCT_target_bases_100X","HS_library_size","HS_penalty_10X","HS_penalty_20X","HS_penalty_30X","HS_penalty_40X","HS_penalty_50X","HS_penalty_100X","AT_dropout","GC_dropout",'Duplication',"Number_variants","PCT_dbSNP_variants","PCT_PASS_variants","Run","Sequencer")
-columns_lane <- c("Lane","PCT_of_lane","PCT_perfect_barcode","PCT_one_mismatch_barcode","Yield_Mbases",'PCT_PF_Clusters',"PCT_Q30_bases","Mean_Quality_Score","Run","Sequencer")
-columns_sample <- c("Lane","Project","Sample_name","Barcode_sequence","PF_Clusters","PCT_of_lane","PCT_perfect_barcode","PCT_one_mismatch_barcode","Yield_Mbases","PCT_PF_Clusters","PCT_Q30_bases","Mean_Quality_Score","Run","Sequencer")
+columns_Processed <- c("Run","Sample_name","Total_number_of_reads","Percentage_reads_mapped","Total_reads","PF_reads","PF_unique_reads","PCT_PF_reads","PCT_PF_UQ_reads","PCT_UQ_reads_aligned",'PCT_PF_UQ_reads_aligned',"PF_UQ_bases_aligned","On_bait_bases","Near_bait_bases","Off_bait_bases","On_target_bases","PCT_selected_bases","PCT_off_bait","On_bait_vs_selected","Mean_bait_coverage","Mean_target_coverage","PCT_usable_bases_on_bait","PCT_usable_bases_on_target","Fold_enrichment","Zero_CVG_targets_PCT","Fold_80_base_penalty","PCT_target_bases_2X","PCT_target_bases_10X","PCT_target_bases_20X","PCT_target_bases_30X","PCT_target_bases_40X","PCT_target_bases_50X","PCT_target_bases_100X","HS_library_size","HS_penalty_10X","HS_penalty_20X","HS_penalty_30X","HS_penalty_40X","HS_penalty_50X","HS_penalty_100X","AT_dropout","GC_dropout",'Duplication',"Number_variants","PCT_dbSNP_variants","PCT_PASS_variants","Sequencer")
+columns_lane <- c("Run","Lane","PCT_of_lane","PCT_perfect_barcode","PCT_one_mismatch_barcode","Yield_Mbases",'PCT_PF_Clusters',"PCT_Q30_bases","Mean_Quality_Score","Sequencer")
+columns_sample <- c("Run","Lane","Project","Sample_name","Barcode_sequence","PF_Clusters","PCT_of_lane","PCT_perfect_barcode","PCT_one_mismatch_barcode","Yield_Mbases","PCT_PF_Clusters","PCT_Q30_bases","Mean_Quality_Score","Sequencer")
 
 shinyUI(
   fluidPage(theme = shinytheme("flatly"),
@@ -30,7 +30,7 @@ shinyUI(
                              weekstart = 1,
                              language = "en",
                              separator = "to",
-                             width = 200,
+                             width = 250,
                              format = "dd-mm-yyyy"
               ),
               checkboxGroupInput("sequencer1", "Sequencers", sequencers, selected = sequencers[1:3]),
@@ -41,7 +41,10 @@ shinyUI(
                 tabPanel("Percentage \u2265 Q30",
                          fluidRow(plotOutput("Run_Q30", width = "1250px", height = "750px", dblclick = "run_dblclick", brush = brushOpts(id = "run_brush", resetOnNew = TRUE))),
                          fluidRow(DT::dataTableOutput("Run_Q30_brushed"))
-                
+                ),
+                tabPanel("Percentage PF Clusters",
+                         plotOutput("Run_PF", width = "1250px", height = "750px", dblclick = "run_dblclick", brush = brushOpts(id = "run_brush", resetOnNew = TRUE)),
+                         fluidRow(DT::dataTableOutput("Run_PF_brushed"))
                 ),
                 tabPanel("Mean Quality Score",
                          fluidRow(plotOutput("Run_MQS", width = "1250px", height = "750px", dblclick = "run_dblclick", brush = brushOpts(id = "run_brush", resetOnNew = TRUE))),
@@ -69,7 +72,7 @@ shinyUI(
                             weekstart = 1,
                             language = "en",
                             separator = "to",
-                            width = 200,
+                            width = 250,
                             format = "dd-mm-yyyy"
              ),
              checkboxGroupInput("sequencer2", "Sequencers", sequencers, selected = sequencers[1:3]),
@@ -79,10 +82,12 @@ shinyUI(
            mainPanel(
              tabsetPanel(
                tabPanel("Percentage Q30 per Lane",
-                        plotOutput("Lane_Q30_line", width = "1250px", height = "750px", dblclick = "lane_dblclick", brush = brushOpts(id = "lane_brush", resetOnNew = TRUE))
+                        fluidRow(plotOutput("Lane_Q30_line", width = "1250px", height = "750px", dblclick = "lane_dblclick", brush = brushOpts(id = "lane_brush", resetOnNew = TRUE))),
+                        fluidRow(DT::dataTableOutput("Lane_Q30_brushed"))
                 ),
                tabPanel("Mean Quality Score per Lane",
-                        plotOutput("Lane_MQS_line", width = "1250px", height = "750px", dblclick = "lane_dblclick", brush = brushOpts(id = "lane_brush", resetOnNew = TRUE))
+                        fluidRow(plotOutput("Lane_MQS_line", width = "1250px", height = "750px", dblclick = "lane_dblclick", brush = brushOpts(id = "lane_brush", resetOnNew = TRUE))),
+                        fluidRow(DT::dataTableOutput("Lane_MQS_brushed"))
                 )
               )
             )
@@ -100,7 +105,8 @@ shinyUI(
                            weekstart = 1,
                            language = "en",
                            separator = "to",
-                           width = 200
+                           width = 250,
+                           format = "dd-mm-yyyy"
             ),
             checkboxGroupInput("sequencer3", "Sequencers", sequencers, selected = sequencers[1:3]),
             downloadButton("download_plot3", "Download Plot"),
@@ -119,6 +125,34 @@ shinyUI(
               tabPanel("Mean Targetcoverage", value = "Proc_MTC",
                        fluidRow(plotOutput("Proc_meantarget", width = "1250px", height = "750px", dblclick = "proc_dblclick", brush = brushOpts(id = "proc_brush", resetOnNew = TRUE))),
                        fluidRow(DT::dataTableOutput("Proc_meantarget_brushed"))
+              ),
+              tabPanel("Mean Baitcoverage", value = "Proc_MTC",
+                       fluidRow(plotOutput("Proc_meanbait", width = "1250px", height = "750px", dblclick = "proc_dblclick", brush = brushOpts(id = "proc_brush", resetOnNew = TRUE))),
+                       fluidRow(DT::dataTableOutput("Proc_meanbait_brushed"))
+              ),
+              tabPanel("Percentage Target bases 20X", value = "Proc_MTC",
+                       fluidRow(plotOutput("Proc_target20X", width = "1250px", height = "750px", dblclick = "proc_dblclick", brush = brushOpts(id = "proc_brush", resetOnNew = TRUE))),
+                       fluidRow(DT::dataTableOutput("Proc_target20X_brushed"))
+              ),
+              tabPanel("Percentage AT dropout", value = "Proc_MTC",
+                       fluidRow(plotOutput("Proc_ATdrop", width = "1250px", height = "750px", dblclick = "proc_dblclick", brush = brushOpts(id = "proc_brush", resetOnNew = TRUE))),
+                       fluidRow(DT::dataTableOutput("Proc_ATdrop_brushed"))
+              ),
+              tabPanel("Percentage GC dropout", value = "Proc_MTC",
+                       fluidRow(plotOutput("Proc_GCdrop", width = "1250px", height = "750px", dblclick = "proc_dblclick", brush = brushOpts(id = "proc_brush", resetOnNew = TRUE))),
+                       fluidRow(DT::dataTableOutput("Proc_GCdrop_brushed"))
+              ),
+              tabPanel("Number of variants", value = "Proc_MTC",
+                       fluidRow(plotOutput("Proc_variants", width = "1250px", height = "750px", dblclick = "proc_dblclick", brush = brushOpts(id = "proc_brush", resetOnNew = TRUE))),
+                       fluidRow(DT::dataTableOutput("Proc_variants_brushed"))
+              ),
+              tabPanel("Percentage dbSNP variants", value = "Proc_MTC",
+                       fluidRow(plotOutput("Proc_dbSNP", width = "1250px", height = "750px", dblclick = "proc_dblclick", brush = brushOpts(id = "proc_brush", resetOnNew = TRUE))),
+                       fluidRow(DT::dataTableOutput("Proc_dbSNP_brushed"))
+              ),
+              tabPanel("Percentage PASS variants", value = "Proc_MTC",
+                       fluidRow(plotOutput("Proc_PASS", width = "1250px", height = "750px", dblclick = "proc_dblclick", brush = brushOpts(id = "proc_brush", resetOnNew = TRUE))),
+                       fluidRow(DT::dataTableOutput("Proc_PASS_brushed"))
               )
             )
           )
