@@ -3,6 +3,7 @@ import vcf
 from sqlalchemy import create_engine, select, Table, MetaData
 import config
 metadata = MetaData()
+#engine = create_engine("mysql+pymysql://trendngs:-@wgs11.op.umcutrecht.nl/trendngs")
 engine = create_engine("mysql+pymysql://"+config.MySQL_DB["username"]+":"+config.MySQL_DB["password"]+"@"+config.MySQL_DB["host"]+"/"+config.MySQL_DB["database"], echo=False)
 conn = engine.connect()
 
