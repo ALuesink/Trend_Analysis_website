@@ -164,17 +164,20 @@ shinyUI(
             conditionalPanel(
               'input.dataset == "Sample Sequencer data"',
               downloadButton("down_sample_seq", "Download data"),
-              checkboxGroupInput("columns_sample", "Columns", columns_sample, selected = columns_sample[1:length(columns_sample)])
+              uiOutput("Samp_columns")
+              # checkboxGroupInput("columns_sample", "Columns", columns_sample, selected = columns_sample[1:length(columns_sample)])
             ),
             conditionalPanel(
               'input.dataset == "Lane Sequencer data"',
               downloadButton("down_lane_seq", "Download data"),
-              checkboxGroupInput("columns_lane", "Columns", columns_lane, selected = columns_lane[1:length(columns_lane)])
+              uiOutput("Lane_columns")
+              # checkboxGroupInput("columns_lane", "Columns", columns_lane, selected = columns_lane[1:length(columns_lane)])
             ),
             conditionalPanel(
               'input.dataset == "Processed data"',              
               downloadButton("down_sample_proc", "Download data"),
-              checkboxGroupInput("columns_processed", "Columns", columns_Processed, selected = columns_Processed[1:length(columns_Processed)])
+              uiOutput("Proc_columns")
+              # checkboxGroupInput("columns_processed", "Columns", columns_Processed, selected = columns_Processed[1:length(columns_Processed)])
             ),
             width = 3
           ),
