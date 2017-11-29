@@ -77,7 +77,7 @@ def laneHTML(seq_runs):
 	        d = datetime.strptime(date, "%Y-%m-%d")
                 as_date = (d-epoch).days
             
-	        lanehtml = commands.getoutput("find " + str(wkdir) + str(seq) + "/" + str(run) + "//Data/Intensities/BaseCalls/Reports/html/*/all/all/all/ -iname \"lane.html\"")
+	        lanehtml = commands.getoutput("find " + str(wkdir) + str(seq) + "/" + str(run) + "/Data/Intensities/BaseCalls/Reports/html/*/all/all/all/ -iname \"lane.html\"")
             
                 with open(lanehtml, "r") as lane:
                     html = lane.read()

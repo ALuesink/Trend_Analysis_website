@@ -22,7 +22,7 @@ for run in runs_path:
 			if run[:-4] in i and "_old" not in i:
 				filtered_runs_path.remove(i)
 
-#runs = ["170519_NB501012_0140_AHJ7T2BGX2","170524_NB501012_0142_AHJCGVBGX2","161121_NB501012_0076_AHVGGLBGXY","161207_NB501012_0082_AHY2M2BGXY","170316_NB501012_0117_AHK577AFXX","170405_NB501012_0125_AHWCG7BGXY","170203_NB501012_0102_AH7MYJBGX2","170306_NB501039_0101_AHHFVGBGX2","170523_NB501039_0124_AHLLYYAFXX","170426_NB501039_0115_AHK5F5AFXX","170529_NB501039_0126_AHJ5JCBGX2","170524_NB501039_0125_AHL7MNBGX2","161118_NB501039_0066_AHV7KJBGXY","170217_NB501039_0097_AH7VL3BGX2","170104_NB501039_0085_AHG33YBGX2","161128_NB501039_0070_AH2GNGBGX2","170405_NB501039_0109_AHK7KGBGX2","161130_NB501039_0071_AHVW35BGXY","170320_NB501039_0104_AHWCCWBGXY","170418_NB501039_0111_AHLKNGBGX2","170322_NB501039_0105_AHKFCMAFXX","170510_NB501039_0118_AHMJLGBGX2","151028_NB501039_0005_AHJYC2BGXX","161221_NB501039_0080_AHY2YYBGXY","170314_NB501039_0102_AHWCVLBGXY","170118_NB501039_0090_AH7MYWBGX2","170227_NB501039_0098_AHJC5JBGX2","161219_NB501039_0079_AHY327BGXY","170203_NB501039_0094_AH7VF5BGX2","170413_NB501039_0110_AHHV75AFXX","170127_NB501039_0092_AHJ2GYAFXX","170303_NB501039_0100_AHJG75BGX2","170517_NB501039_0121_AHMJ25BGX2","161121_NB501039_0067_AHVF5FBGXY","170206_NB501039_0095_AHCFM3BGX2","170110_NB501039_0087_AHCFGTBGX2","170329_NB501039_0108_AHKGTHAFXX","170116_NB501039_0089_AH7VKGBGX2","161216_NB501039_0078_AHWYTWBGXY","161209_NB501039_0075_AHY2VMBGXY","161205_NB501039_0073_AHY2TTBGXY","170512_NB501039_0119_AHMLTGBGX2","161230_NB501039_0083_AHHTL3AFXX","170113_NB501039_0088_AHF5FJBGX2","170324_NB501039_0106_AHK7K3BGX2","170102_NB501039_0084_AHC7YYBGX2","161123_NB501039_0068_AHY3GNBGXY","161207_NB501039_0074_AHHN7LAFXX","170131_NB501039_0093_AH7VKFBGX2","161214_NB501039_0077_AHWWM3BGXY","161212_NB501039_0076_AHY35NBGXY","170215_NB501039_0096_AH7VJ2BGX2","170424_NB501039_0114_AHTGWFBGX2","161116_NB501039_0065_AHVNJKBGXY","170106_NB501039_0086_AH7MYNBGX2","170316_NB501039_0103_AHHW32BGX2","170515_NB501039_0120_AHL7JHBGX2","170421_NB501039_0113_AHK5FCAFXX","161223_NB501039_0081_AH7VFCBGX2","161202_NB501039_0072_AHHNJ3AFXX","170420_NB501039_0112_AHLGGMBGX2","170327_NB501039_0107_AHJ7K2BGX2","170508_NB501039_0117_AHTGWHBGX2","170505_NB501039_0116_AHKFL2AFXX","170301_NB501039_0099_AHC7Y2BGX2","161228_NB501039_0082_AHWYNLBGXY","170120_NB501039_0091_AH7JK7BGX2"]
+runs = ['171020_NB501012_0205_AHTFN2BGX3', '171103_NB501039_0191_AHLNC2BGX3', '171108_NB501039_0193_AHLMTWBGX3', '171106_NB501012_0212_AHLVGLBGX3', '171110_NB501039_0194_AHNGWFBGX3', '171113_NB501012_0215_AHNG3GBGX3', '171115_NB501012_0216_AHLMV2BGX3', '171117_NB501012_0217_AHWYLFBGX3', '171115_NB501039_0196_AHWY5FBGX3', '171120_NB501012_0218_AHY3W3BGX3', '171120_NB501039_0198_AHY5F3BGX3']
 
 Run = Table("Run", metadata, autoload=True, autoload_with=engine)
 Sample_Processed = Table("Sample_Processed", metadata, autoload=True, autoload_with=engine)
@@ -48,21 +48,21 @@ for run in result_run_processed:
 
 #filtered_runs_path = [1]
 data_table = []
-for run_path in filtered_runs_path:
-#for run in runs:
+#for run_path in filtered_runs_path:
+for run in runs:
 	try:
-		run = run_path.split("/")[6]
-#		run = "171020_NB501012_0205_AHTFN2BGX3_old"
+#		run = run_path.split("/")[6]
+#		run = "171120_NB501039_0198_AHY5F3BGX3"
 		run_core = run
 		if "_old" in run:
 			run_core = run.strip("_old")
 		elif "U_U" in run:
 			run_core = run.split("_")
 			run_core = run_core[0]+"_"+run_core[1]+"_"+run_core[2]+"_"+run_core[3]
-		print(run)
+#		print(run)
 #		print(run_core)
 #		print(run + "\t" + run_core)
-		if run not in run_processed_db:
+		if run_core not in run_processed_db and run_core in run_in_db:
 			dic_samples = {}
 			print(run + "\t" + "start vcf")
 			file_vcf = commands.getoutput("find " + str(wkdir) + str(run) + "/ -maxdepth 1 -iname \"*.filtered_variants.vcf\"")
@@ -137,7 +137,7 @@ for run_path in filtered_runs_path:
 					sample = []
 					qc_stats = QCstats.read().split("\n")
 					for l in qc_stats:
-						regel = l.split("\t")[:-1]
+						regel = l.split("\t")
 						sample.append(regel)
 		
 					qc_table = [list(i) for i in map(None,*sample)]
@@ -147,9 +147,10 @@ for run_path in filtered_runs_path:
 						data_table_header = [item.replace(" ","_") for item in data_table_header]
 						data_table_header.extend(["Run", "Perc_duplication", "Number_variants", "Perc_dbSNP_variants","Perc_PASS_variants"])
 						data_table.append(data_table_header)
-			
+#					print(qc_table)
 					for stats in qc_table[1:]:
 						stats = stats[:-1]
+#						print(stats)
 						stats[0] = stats[0].replace("_dedup","")
 						stats[2] = float(stats[2].strip("%"))
 						index = [11,12,14,20,21,22,25,26,28,30,31,32,33,34,35,36]
