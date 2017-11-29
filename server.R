@@ -48,6 +48,16 @@ function(input, output, session){
     dbDisconnect(con)
     return(results)
   }
+  query_math <- function(a,b,x,y,date_min,date_max){
+    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    query = sprintf("SELECT %s, (%s / %s)*100 AS '%s', Sequencer FROM Run JOIN Sample_Processed ON Run.Run_ID = Sample_Processed.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x,a,b,y,date_min,date_max )
+    response <- dbSendQuery(con, query)
+    results <- dbFetch(response, n=-1)
+    dbClearResult(response)
+    dbDisconnect(con)
+    # print(results)
+    return(results)
+  }
   
   query_run_table <- function(columns){
     con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
@@ -186,7 +196,6 @@ function(input, output, session){
   })
     
   plot_sample_proc <- function(x_var,y_var,titel,y_lab){
-    
     day_min <- as.numeric(input$date_input3[1])
     day_max <- as.numeric(input$date_input3[2])
     sub_data <- query_sample_proc(x_var,y_var,day_min,day_max)
@@ -220,11 +229,19 @@ function(input, output, session){
   output$Proc_variants <- renderPlot({
     plot_sample_proc("Run", "Number_variants", "Number of variants", "Number of variants")
   })
+  
+  plot_sample_math <- function(a, b, x_var, y_var, titel,y_lab){
+    day_min <- as.numeric(input$date_input3[1])
+    day_max <- as.numeric(input$date_input3[2])
+    sub_data <- query_math(a, b, x_var,y_var,day_min,day_max)
+    sub_data <- subset(sub_data, Sequencer %in% input$sequencer3)
+    ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=1, aes(colour=Sequencer)) + geom_smooth(aes(group=Sequencer, colour=Sequencer), method="loess") + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1, size = 10), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges3$x, ylim = ranges3$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
+  }
   output$Proc_dbSNP <- renderPlot({
-    plot_sample_proc("Run", "PCT_dbSNP_variants", "Percentage dbSNP variants", "% dbSNP variants")
+    plot_sample_math("dbSNP_variants", "Number_variants", "Run", "PCT_dbSNP_variants", "Percentage dbSNP variants", "% dbSNP variants")
   })
   output$Proc_PASS <- renderPlot({
-    plot_sample_proc("Run", "PCT_PASS_variants", "Percentage PASS variants", "% PASS variants")
+    plot_sample_math("PASS_variants", "Number_variants", "Run", "PCT_PASS_variants", "Percentage PASS variants", "% PASS variants")
   })
   
   brush_sample_proc_plot <- function(x_var,y_var){
@@ -239,40 +256,46 @@ function(input, output, session){
     if(y_var == "Number_variants"){
       sub_data$Number_variants <- as.numeric(sub_data$Number_variants)
     }
+    if(y_var == "(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants'"){
+      y_var = "PCT_dbSNP_variants"
+    }
+    if(y_var == "(PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'"){
+      y_var = "PCT_PASS_variants"
+    }
     sub_data <- transform(sub_data, plotID = as.numeric(factor(Run)))
     sub_data <- sub_data[order(sub_data$plotID),]
     new_data <- sub_data[which(sub_data$plotID >= brush_xmin & sub_data$plotID <= brush_xmax & sub_data[[y_var]] >= brush_ymin & sub_data[[y_var]] <= brush_ymax), c("Run", "Sample_name","PCT_selected_bases","Mean_bait_coverage","Mean_target_coverage","PCT_target_bases_20X","AT_dropout","GC_dropout","Duplication","Number_variants","PCT_dbSNP_variants","PCT_PASS_variants", "Sequencer")]
     datatable(new_data, filter = 'top', rownames = FALSE, colnames = c("Run", "Sample name","% selected bases","Mean bait coverage","Mean target coverage","% target bases 20X","% AT dropout","% GC dropout","% Duplicates","Number of variants","% dbSNP variants","% PASS variants", "Sequencer" ))
   }
   output$Proc_dup_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, PCT_selected_bases, Mean_bait_coverage, Mean_target_coverage, PCT_target_bases_20X, AT_dropout,GC_dropout,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants","Duplication")
+    brush_sample_proc_plot("Run, Sample_name, PCT_selected_bases, Mean_bait_coverage, Mean_target_coverage, PCT_target_bases_20X, AT_dropout,GC_dropout,Number_variants, (dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","Duplication")
   })
   output$Proc_selected_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_bait_coverage, Mean_target_coverage, PCT_target_bases_20X, AT_dropout,GC_dropout,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants","PCT_selected_bases")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_bait_coverage, Mean_target_coverage, PCT_target_bases_20X, AT_dropout,GC_dropout,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","PCT_selected_bases")
   })
   output$Proc_meantarget_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_bait_coverage,PCT_selected_bases, PCT_target_bases_20X, AT_dropout,GC_dropout,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants","Mean_target_coverage")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_bait_coverage,PCT_selected_bases, PCT_target_bases_20X, AT_dropout,GC_dropout,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","Mean_target_coverage")
   })
   output$Proc_meanbait_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, PCT_target_bases_20X, AT_dropout,GC_dropout,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants","Mean_bait_coverage")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, PCT_target_bases_20X, AT_dropout,GC_dropout,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","Mean_bait_coverage")
   })
   output$Proc_target20X_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, AT_dropout,GC_dropout,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants","PCT_target_bases_20X")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, AT_dropout,GC_dropout,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","PCT_target_bases_20X")
   })
   output$Proc_ATdrop_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X,GC_dropout,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants","AT_dropout")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X,GC_dropout,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","AT_dropout")
   })
   output$Proc_GCdrop_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants","GC_dropout")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","GC_dropout")
   })
   output$Proc_variants_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout, GC_dropout,PCT_dbSNP_variants,PCT_PASS_variants","Number_variants")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout, GC_dropout,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","Number_variants")
   })
   output$Proc_dbSNP_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout, GC_dropout,Number_variants,PCT_PASS_variants","PCT_dbSNP_variants")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout, GC_dropout,Number_variants, (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'","(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants'")
   })
   output$Proc_PASS_brushed <- DT::renderDataTable({
-    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout, GC_dropout,Number_variants,PCT_dbSNP_variants","PCT_PASS_variants")
+    brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout, GC_dropout,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants'","(PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'")
   })
   
   output$run_table <- DT::renderDataTable({
