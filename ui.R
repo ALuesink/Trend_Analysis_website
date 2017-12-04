@@ -1,11 +1,11 @@
 library(shiny)
 library(shinythemes)
 
-sequencers <- c("hiseq_umc01", "nextseq_umc01", "nextseq_umc02")
+sequencers <- c("hiseq_umc01", "nextseq_umc01", "nextseq_umc02", "novaseq_umc01")
 lanes <- c(1,2,3,4)
-columns_Processed <- c("Run","Sample_name","Total_number_of_reads","Percentage_reads_mapped","Total_reads","PF_reads","PF_unique_reads","PCT_PF_reads","PCT_PF_UQ_reads","PCT_UQ_reads_aligned",'PCT_PF_UQ_reads_aligned',"PF_UQ_bases_aligned","On_bait_bases","Near_bait_bases","Off_bait_bases","On_target_bases","PCT_selected_bases","PCT_off_bait","On_bait_vs_selected","Mean_bait_coverage","Mean_target_coverage","PCT_usable_bases_on_bait","PCT_usable_bases_on_target","Fold_enrichment","Zero_CVG_targets_PCT","Fold_80_base_penalty","PCT_target_bases_2X","PCT_target_bases_10X","PCT_target_bases_20X","PCT_target_bases_30X","PCT_target_bases_40X","PCT_target_bases_50X","PCT_target_bases_100X","HS_library_size","HS_penalty_10X","HS_penalty_20X","HS_penalty_30X","HS_penalty_40X","HS_penalty_50X","HS_penalty_100X","AT_dropout","GC_dropout",'Duplication',"Number_variants","PCT_dbSNP_variants","PCT_PASS_variants","Sequencer")
-columns_lane <- c("Run","Lane","PCT_of_lane","PCT_perfect_barcode","PCT_one_mismatch_barcode","Yield_Mbases",'PCT_PF_Clusters',"PCT_Q30_bases","Mean_Quality_Score","Sequencer")
-columns_sample <- c("Run","Lane","Project","Sample_name","Barcode_sequence","PF_Clusters","PCT_of_lane","PCT_perfect_barcode","PCT_one_mismatch_barcode","Yield_Mbases","PCT_PF_Clusters","PCT_Q30_bases","Mean_Quality_Score","Sequencer")
+# columns_Processed <- c("Run","Sample_name","Total_number_of_reads","Percentage_reads_mapped","Total_reads","PF_reads","PF_unique_reads","PCT_PF_reads","PCT_PF_UQ_reads","PCT_UQ_reads_aligned",'PCT_PF_UQ_reads_aligned',"PF_UQ_bases_aligned","On_bait_bases","Near_bait_bases","Off_bait_bases","On_target_bases","PCT_selected_bases","PCT_off_bait","On_bait_vs_selected","Mean_bait_coverage","Mean_target_coverage","PCT_usable_bases_on_bait","PCT_usable_bases_on_target","Fold_enrichment","Zero_CVG_targets_PCT","Fold_80_base_penalty","PCT_target_bases_2X","PCT_target_bases_10X","PCT_target_bases_20X","PCT_target_bases_30X","PCT_target_bases_40X","PCT_target_bases_50X","PCT_target_bases_100X","HS_library_size","HS_penalty_10X","HS_penalty_20X","HS_penalty_30X","HS_penalty_40X","HS_penalty_50X","HS_penalty_100X","AT_dropout","GC_dropout",'Duplication',"Number_variants","PCT_dbSNP_variants","PCT_PASS_variants","Sequencer")
+# columns_lane <- c("Run","Lane","PCT_of_lane","PCT_perfect_barcode","PCT_one_mismatch_barcode","Yield_Mbases",'PCT_PF_Clusters',"PCT_Q30_bases","Mean_Quality_Score","Sequencer")
+# columns_sample <- c("Run","Lane","Project","Sample_name","Barcode_sequence","PF_Clusters","PCT_of_lane","PCT_perfect_barcode","PCT_one_mismatch_barcode","Yield_Mbases","PCT_PF_Clusters","PCT_Q30_bases","Mean_Quality_Score","Sequencer")
 
 shinyUI(
   fluidPage(theme = shinytheme("flatly"),
@@ -33,7 +33,7 @@ shinyUI(
                              width = 250,
                              format = "dd-mm-yyyy"
               ),
-              checkboxGroupInput("sequencer1", "Sequencers", sequencers, selected = sequencers[1:3]),
+              checkboxGroupInput("sequencer1", "Sequencers", sequencers, selected = sequencers[1:length(sequencers)]),
               width = 3
             ),
             mainPanel(
@@ -75,7 +75,7 @@ shinyUI(
                             width = 250,
                             format = "dd-mm-yyyy"
              ),
-             checkboxGroupInput("sequencer2", "Sequencers", sequencers, selected = sequencers[1:3]),
+             checkboxGroupInput("sequencer2", "Sequencers", sequencers, selected = sequencers[1:length(sequencers)]),
              checkboxGroupInput("lanes", "Lanes", lanes, selected = lanes[1:4]),
              width = 3
               ),
@@ -108,8 +108,7 @@ shinyUI(
                            width = 250,
                            format = "dd-mm-yyyy"
             ),
-            checkboxGroupInput("sequencer3", "Sequencers", sequencers, selected = sequencers[1:3]),
-            downloadButton("download_plot3", "Download Plot"),
+            checkboxGroupInput("sequencer3", "Sequencers", sequencers, selected = sequencers[1:length(sequencers)]),
             width = 3
           ),
           mainPanel(
