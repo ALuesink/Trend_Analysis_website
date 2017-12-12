@@ -153,13 +153,14 @@ function(input, output, session){
   output$Run_PF <- renderPlot({
     x_var <- "Run"
     y_var <- "PCT_PF_Cluster"
+    y <- "(Cluster_PF / Cluster_Raw)*100 AS 'PCT_PF_Cluster'"
     titel <- "Percentage PF Clusters"
     y_lab <- "% PF Clusters"
     day_min <- as.numeric(input$date_input1[1])
     day_max <- as.numeric(input$date_input1[2])
-    sub_data <- query_run(x_var,y_var,day_min,day_max)
+    sub_data <- query_run(x_var,y,day_min,day_max)
     sub_data <- subset(sub_data, Sequencer %in% input$sequencer1)
-    ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=19, aes(colour=Sequencer)) + geom_smooth(aes(group=Sequencer, colour=Sequencer), method="loess", se=FALSE) + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges1$x, ylim = ranges1$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
+    ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=19, aes(colour=Sequencer), size=3) + geom_smooth(aes(group=Sequencer, colour=Sequencer), method="loess", se=FALSE) + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges1$x, ylim = ranges1$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
   })
   
   output$MSQ_Q30 <- renderPlot({
@@ -183,6 +184,9 @@ function(input, output, session){
     day_max <- as.numeric(input$date_input1[2])
     sub_data <- query_sample_seq(x_var,y_var,day_min,day_max)
     sub_data <- subset(sub_data, Sequencer %in% input$sequencer1)
+    if(y_var == "(Cluster_PF / Cluster_Raw)*100 AS 'PCT_PF_Cluster'"){
+      y_var = "PCT_PF_Cluster"
+    }
     sub_data <- transform(sub_data, plotID = as.numeric(factor(Run)))
     sub_data <- sub_data[order(sub_data$plotID),]
     new_data <- sub_data[which(sub_data$plotID >= brush_xmin & sub_data$plotID <= brush_xmax & sub_data[[y_var]] >= brush_ymin & sub_data[[y_var]] <= brush_ymax), c("Lane","Sample_name","Project","PCT_Q30_bases","PCT_PF_Cluster", "Mean_Quality_Score", "PCT_one_mismatch_barcode", "Run", "Sequencer")]
@@ -190,16 +194,16 @@ function(input, output, session){
     # str(input$run_brush)
   }
   output$Run_Q30_brushed <- DT::renderDataTable({
-    brush_run_plot("Lane, Sample_name, Project, PCT_PF_Cluster,Run,Mean_Quality_Score,PCT_one_mismatch_barcode","PCT_Q30_bases")
+    brush_run_plot("Lane, Sample_name, Project, (Cluster_PF / Cluster_Raw)*100 AS 'PCT_PF_Cluster' ,Run,Mean_Quality_Score,PCT_one_mismatch_barcode","PCT_Q30_bases")
   })
   output$Run_MQS_brushed <- DT::renderDataTable({
-    brush_run_plot("Lane, Sample_name, Project, PCT_PF_Cluster,PCT_Q30_bases,Run,PCT_one_mismatch_barcode","Mean_Quality_Score")
+    brush_run_plot("Lane, Sample_name, Project, (Cluster_PF / Cluster_Raw)*100 AS 'PCT_PF_Cluster',PCT_Q30_bases,Run,PCT_one_mismatch_barcode","Mean_Quality_Score")
   })
   output$Run_Bar_brushed <- DT::renderDataTable({
-    brush_run_plot("Lane, Sample_name, Project,PCT_PF_Cluster,PCT_Q30_bases,Mean_Quality_Score,Run", "PCT_one_mismatch_barcode")
+    brush_run_plot("Lane, Sample_name, Project,(Cluster_PF / Cluster_Raw)*100 AS 'PCT_PF_Cluster',PCT_Q30_bases,Mean_Quality_Score,Run", "PCT_one_mismatch_barcode")
   })
   output$Run_PF_brushed <- DT::renderDataTable({
-    brush_run_plot("Lane, Sample_name, Project,PCT_one_mismatch_barcode ,PCT_Q30_bases,Mean_Quality_Score,Run", "PCT_PF_Cluster")
+    brush_run_plot("Lane, Sample_name, Project,PCT_one_mismatch_barcode ,PCT_Q30_bases,Mean_Quality_Score,Run", "(Cluster_PF / Cluster_Raw)*100 AS 'PCT_PF_Cluster'")
   })
   
   plot_lane_run <- function(x_var, y_var, titel, y_lab){
