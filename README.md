@@ -12,7 +12,7 @@ This website requires several R packages:
 * RMariaDB
 * RMySQL
 
-To connect to the data, the login data is stored in the .my.cnf file. This file needs to be put in the home directory (/~).  
+To connect to the database, the login data is stored in the .my.cnf file. This file needs to be put in the home directory (/~).  
 
 ## Website layout
 This website has a simple layout.
