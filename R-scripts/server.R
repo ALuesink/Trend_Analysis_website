@@ -6,7 +6,7 @@ library(RMariaDB)
 library(RMySQL)
 
 function(input, output, session){
-  options(shiny.sanitize.errors = TRUE)
+  # options(shiny.sanitize.errors = TRUE)
   sequencers <- c("hiseq_umc01", "nextseq_umc01", "nextseq_umc02", "novaseq_umc01")
   lanes <- c("1", "2", "3", "4")
   cols_sequencer <- c("hiseq_umc01"="#009E73", "nextseq_umc01"="#0072B2", "nextseq_umc02"="#D55E00", "novaseq_umc01"="#D4AC0D")
