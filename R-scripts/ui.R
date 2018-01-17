@@ -50,9 +50,6 @@ shinyUI(
                 tabPanel("Percentage One Mismatch Barcode",
                          fluidRow(plotOutput("Run_Bar", width = "1250px", height = "750px", dblclick = "run_dblclick", brush = brushOpts(id = "run_brush", resetOnNew = TRUE))),
                          fluidRow(DT::dataTableOutput("Run_Bar_brushed"))
-                ),
-                tabPanel("Mean Quality Score & Q30",
-                         plotOutput("MSQ_Q30", width = "1250px", height = "750px", dblclick = "run_dblclick", brush = brushOpts(id = "run_brush", resetOnNew = TRUE))
                 )
               )
             )

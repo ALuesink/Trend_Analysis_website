@@ -9,10 +9,11 @@ function(input, output, session){
   options(shiny.sanitize.errors = TRUE)
   sequencers <- c("hiseq_umc01", "nextseq_umc01", "nextseq_umc02", "novaseq_umc01")
   lanes <- c("1", "2", "3", "4")
-  cols_sequencer <- c("hiseq_umc01" = "#009E73", "nextseq_umc01" = "#0072B2", "nextseq_umc02" = "#D55E00", "novaseq_umc01" = "#D4AC0D")
-  cols_lanes <- c("1" = "darkred", "2" = "darkgoldenrod2", "3" = "navyblue", "4" = "cyan3")
-  shape_sequencer <- c("hiseq_umc01" = 15, "nextseq_umc01" = 19, "nextseq_umc02" = 18, "novaseq_umc01" = 17)
+  cols_sequencer <- c("hiseq_umc01"="#009E73", "nextseq_umc01"="#0072B2", "nextseq_umc02"="#D55E00", "novaseq_umc01"="#D4AC0D")
+  cols_lanes <- c("1"="darkred", "2"="darkgoldenrod2", "3"="navyblue", "4"="cyan3")
+  shape_sequencer <- c("hiseq_umc01"=15, "nextseq_umc01"=19, "nextseq_umc02"=18, "novaseq_umc01"=17)
   
+  # The columns for the data tables and sequencers and lanes for the filters retrieved from the database
   output$Proc_columns <- renderUI({
     con <- dbConnect(RMySQL::MySQL(), group="trendngs")
     res <- suppressWarnings(dbSendQuery(con, "SELECT Run.Run, Run.Sequencer, Sample_Processed.* FROM Run JOIN Sample_Processed ON Run.Run_ID = Sample_Processed.Run_ID LIMIT 1"))
@@ -68,6 +69,7 @@ function(input, output, session){
     checkboxGroupInput("lanes", "Lanes", lanes, selected = lanes[1:length(lanes)])
   })
   
+  # Connection to the database to retrieve data, input is the x and y value and the minimal and maximal date
   query_sample_seq <- function(x, y, date_min, date_max){
     con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
     query = sprintf("SELECT %s, %s, Sequencer, asDate FROM Run JOIN Sample_Sequencer ON Run.Run_ID = Sample_Sequencer.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x, y, date_min, date_max)
@@ -95,7 +97,7 @@ function(input, output, session){
     dbDisconnect(con)
     return(results)
   }
-  query_run <- function(x,y,date_min,date_max){
+  query_run <- function(x, y, date_min, date_max){
     con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
     query <- sprintf("SELECT %s, %s, Sequencer FROM Run WHERE asDate BETWEEN %s AND %s", x, y, date_min, date_max)
     response <- dbSendQuery(con, query)
@@ -104,6 +106,7 @@ function(input, output, session){
     dbDisconnect(con)
     return(results)
   }
+  # Connection to the database to retrieve data and calculate values, input: a and b are the math values, x value and y value, minimal and maximal date
   query_math <- function(a,b,x,y,date_min,date_max){
     con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
     query = sprintf("SELECT %s, (%s / %s)*100 AS '%s', Sequencer FROM Run JOIN Sample_Processed ON Run.Run_ID = Sample_Processed.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x,a,b,y,date_min,date_max )
@@ -115,6 +118,7 @@ function(input, output, session){
     return(results)
   }
   
+  # Retrieve data for the data tables, with only the columns selected
   query_run_table <- function(columns){
     con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
     query <- sprintf("SELECT Run, %s, Sequencer FROM Run JOIN Sample_Sequencer ON Run.Run_ID = Sample_Sequencer.Run_ID",columns)
@@ -143,6 +147,7 @@ function(input, output, session){
     return(results)
   }
 
+  # Generic function to plot the Run data, input is the x and y value, title of the plot and the y label
   plot_sample_seq <-function(x_var, y_var, titel, y_lab){
     day_min <- as.numeric(input$date_input1[1])
     day_max <- as.numeric(input$date_input1[2])
@@ -156,7 +161,7 @@ function(input, output, session){
     }
   }
   output$Run_Q30 <- renderPlot({
-    plot_sample_seq("Run", "PCT_Q30_bases", "Percentage Q30", "Percentage Q30")
+    plot_sample_seq("Run", "PCT_Q30_bases", "Percentage \u2265 Q30", "Percentage \u2265 Q30")
   })
   output$Run_MQS <- renderPlot({
     plot_sample_seq("Run", "Mean_Quality_Score", "Mean Quality Score", "Mean Quality Score")
@@ -177,19 +182,8 @@ function(input, output, session){
     ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=19, aes(colour=Sequencer), size=3) + stat_smooth(aes(group=Sequencer, colour=Sequencer), method = "glm") + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges1$x, ylim = ranges1$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
   })
   
-  output$MSQ_Q30 <- renderPlot({
-    validate(
-      need(input$sequencer1 != 0, "Error: Select a sequencer")
-    )
-    p
-    day_min <- as.numeric(input$date_input1[1])
-    day_max <- as.numeric(input$date_input1[2])
-    sub_data <- query_sample_seq("Run", "Mean_Quality_Score, PCT_Q30_bases",day_min,day_max)
-    sub_data <- subset(sub_data, Sequencer %in% input$sequencer1)
-    ggplot(sub_data, aes(x = Run)) + geom_point(aes(y = PCT_Q30_bases, colour = Sequencer, shape = "PCT_Q30_bases"),size=3) + geom_point(aes(y = Mean_Quality_Score*2.5, colour=Sequencer, shape = "Mean_Quality_Score"), size = 3) + scale_y_continuous(sec.axis = sec_axis(~./2.5, name = "Mean Quality Score")) + stat_summary(aes(y= PCT_Q30_bases),fun.y="mean", colour="black", size=3, geom="point") + stat_summary(aes(y=Mean_Quality_Score*2.5),fun.y="mean", colour="black", size=3, geom="point") + ylab("Q30 (%)") + geom_smooth(aes(y = Mean_Quality_Score*2.5, group=Sequencer, color=Sequencer), method="auto") + geom_smooth(aes(y=PCT_Q30_bases, group=Sequencer, color=Sequencer), method="loess", linetype="dashed") + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + scale_shape_manual(name = "Parameter", labels = c("Mean Quality Score", "Q30"), values = c(4,1)) + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18), legend.key = element_blank()) + coord_cartesian(xlim = ranges1$x, ylim = ranges1$y, expand = TRUE) + guides(color=guide_legend(override.aes=list(fill=NA)))
-  })
-  
-  brush_run_plot <-function(x_var,y_var){
+  # Generic function for the brush of the Run plots, input is x and y value
+  brush_run_plot <-function(x_var, y_var){
     brush_xmin <- input$run_brush$xmin
     brush_xmax <- input$run_brush$xmax
     brush_ymin <- input$run_brush$ymin
@@ -220,6 +214,7 @@ function(input, output, session){
     brush_run_plot("Lane, Sample_name, Project,PCT_one_mismatch_barcode ,PCT_Q30_bases,Mean_Quality_Score,Run", "(Cluster_PF / Cluster_Raw)*100 AS 'PCT_PF_Cluster'")
   })
   
+  # Generic function to plot the lane per run data, input is x and y value, title and the y label
   plot_lane_run <- function(x_var, y_var, titel, y_lab){
     day_min <- as.numeric(input$date_input2[1])
     day_max <- as.numeric(input$date_input2[2])
@@ -228,12 +223,13 @@ function(input, output, session){
     ggplot(sub_data, aes_string(x=x_var, y=y_var, group=x_var)) + geom_point(aes(colour = Lane, shape= Sequencer), size=3) + geom_smooth(aes(group = Lane, colour = Lane), method = "auto", se=FALSE)  + scale_colour_manual(name = "Lanes", labels = input$lanes, values = cols_lanes) + scale_shape_manual(name= "Sequencer", values = shape_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA))) + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1, size = 10), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18))+ ylab(y_lab)
   }
   output$Lane_Q30_line <- renderPlot({
-    plot_lane_run("Run", "PCT_Q30_bases", "Percentage Q30 per lane", "Percentage Q30")
+    plot_lane_run("Run", "PCT_Q30_bases", "Percentage \u2265 Q30 per lane", "Percentage \u2265 Q30")
   })
   output$Lane_MQS_line <- renderPlot({
     plot_lane_run("Run", "Mean_Quality_Score", "Mean Quality Score per Lane", "Mean Quality Score")
   })
 
+  # Generic funtion for the brush of the lane per run plots, input is x and y value
   brush_lane_plot <- function(x_var, y_var){
     brush_xmin <- input$lane_brush$xmin
     brush_xmax <- input$lane_brush$xmax
@@ -254,8 +250,9 @@ function(input, output, session){
   output$Lane_MQS_brushed <- DT::renderDataTable({
     brush_lane_plot("Lane,PF_Clusters,PCT_of_lane,PCT_perfect_barcode,PCT_one_mismatch_barcode,Run_per_Lane.Yield_Mbases,PCT_PF_Clusters,PCT_Q30_bases,Run", "Mean_Quality_Score")
   })
-    
-  plot_sample_proc <- function(x_var,y_var,titel,y_lab){
+  
+  # Generic function to plot the Sample Processed data, input is x and y value, the title and the y label
+  plot_sample_proc <- function(x_var, y_var, titel, y_lab){
     day_min <- as.numeric(input$date_input3[1])
     day_max <- as.numeric(input$date_input3[2])
     sub_data <- query_sample_proc(x_var,y_var,day_min,day_max)
@@ -290,10 +287,11 @@ function(input, output, session){
     plot_sample_proc("Run", "Number_variants", "Number of variants", "Number of variants")
   })
   
-  plot_sample_math <- function(a, b, x_var, y_var, titel,y_lab){
+  # Generic function which calculates value to plot Sample Processed data, input: a and b are the values for the math, x and y value and the title and y label
+  plot_sample_math <- function(a, b, x_var, y_var, titel, y_lab){
     day_min <- as.numeric(input$date_input3[1])
     day_max <- as.numeric(input$date_input3[2])
-    sub_data <- query_math(a, b, x_var,y_var,day_min,day_max)
+    sub_data <- query_math(a, b, x_var, y_var, day_min, day_max)
     sub_data <- subset(sub_data, Sequencer %in% input$sequencer3)
     ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=1, aes(colour=Sequencer)) + geom_smooth(aes(group=Sequencer, colour=Sequencer), method="auto") + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1, size = 10), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges3$x, ylim = ranges3$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
   }
@@ -304,7 +302,8 @@ function(input, output, session){
     plot_sample_math("PASS_variants", "Number_variants", "Run", "PCT_PASS_variants", "Percentage PASS variants", "% PASS variants")
   })
   
-  brush_sample_proc_plot <- function(x_var,y_var){
+  # Generic function for the brush the Sample Processed plots, input is the x and y label
+  brush_sample_proc_plot <- function(x_var, y_var){
     brush_xmin <- input$proc_brush$xmin
     brush_xmax <- input$proc_brush$xmax
     brush_ymin <- input$proc_brush$ymin
@@ -358,6 +357,7 @@ function(input, output, session){
     brush_sample_proc_plot("Run, Sample_name, Duplication, Mean_target_coverage,PCT_selected_bases, Mean_bait_coverage, PCT_target_bases_20X, AT_dropout, GC_dropout,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants'","(PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'")
   })
   
+  # Data tables of the Run, Run per Lane and Sample Processed data
   output$run_table <- DT::renderDataTable({
     data <- query_run_table("Lane,Project,Sample_name,Barcode_sequence,PF_Clusters,PCT_of_lane,PCT_perfect_barcode,PCT_one_mismatch_barcode,Sample_Sequencer.Yield_Mbases,PCT_PF_Clusters,PCT_Q30_bases,Mean_Quality_Score")
     data <- data[, input$columns_sample, drop=FALSE]
@@ -378,6 +378,7 @@ function(input, output, session){
     DT::datatable(data,filter = 'top', rownames = FALSE, extensions = 'FixedHeader', options = list(fixedHeader = TRUE))
   })
 
+  # Download functions to download data from the data tables
   output$down_sample_seq <- downloadHandler(
     filename = function(){
       paste("Sample_sequencer_data", ".csv", sep ="")
@@ -405,6 +406,8 @@ function(input, output, session){
       write.csv(query_processed_table("Sample_name,Total_number_of_reads,Percentage_reads_mapped,Total_reads,PF_reads,PF_unique_reads,PCT_PF_reads,PCT_PF_UQ_reads,PCT_UQ_reads_aligned,PCT_PF_UQ_reads_aligned,PF_UQ_bases_aligned,On_bait_bases,Near_bait_bases,Off_bait_bases,On_target_bases,PCT_selected_bases,PCT_off_bait,On_bait_vs_selected,Mean_bait_coverage,Mean_target_coverage,PCT_usable_bases_on_bait,PCT_usable_bases_on_target,Fold_enrichment,Zero_CVG_targets_PCT,Fold_80_base_penalty,PCT_target_bases_2X,PCT_target_bases_10X,PCT_target_bases_20X,PCT_target_bases_30X,PCT_target_bases_40X,PCT_target_bases_50X,PCT_target_bases_100X,HS_library_size,HS_penalty_10X,HS_penalty_20X,HS_penalty_30X,HS_penalty_40X,HS_penalty_50X,HS_penalty_100X,AT_dropout,GC_dropout,Duplication,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants")[data_filter, input$columns_processed,drop=FALSE],file,row.names = FALSE)
     }
   )
+  
+  # Ranges and observeEvent for the brush functions
   ranges1 <- reactiveValues(x = NULL, y= NULL)
   ranges2 <- reactiveValues(x = NULL, y= NULL)
   ranges3 <- reactiveValues(x = NULL, y= NULL)
@@ -439,5 +442,5 @@ function(input, output, session){
     }
   })
   
-  # session$onSessionEnded(stopApp)
+  session$onSessionEnded(stopApp)
 }
