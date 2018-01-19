@@ -56,13 +56,13 @@ function(input, output, session){
     }
     checkboxGroupInput("columns_lane", "Columns", kolomn, selected = kolomn[1:length(kolomn)])
   })
-  output$sequencer1 <- renderUI({
+  output$sequencerRun <- renderUI({
     checkboxGroupInput("sequencer1", "Sequencers", sequencers, selected = sequencers[1:length(sequencers)])
   })
-  output$sequencer2 <- renderUI({
+  output$sequencerLane <- renderUI({
     checkboxGroupInput("sequencer2", "Sequencers", sequencers, selected = sequencers[1:length(sequencers)])
   })
-  output$sequencer3 <- renderUI({
+  output$sequencerProc <- renderUI({
     checkboxGroupInput("sequencer3", "Sequencers", sequencers, selected = sequencers[1:length(sequencers)])
   })
   output$lanes <- renderUI({
@@ -263,16 +263,16 @@ function(input, output, session){
     ggplot(sub_data, aes_string(x=x_var,y=y_var,group=x_var)) + geom_point(shape=1, aes(colour=Sequencer)) + geom_smooth(aes(group=Sequencer, colour=Sequencer), method="auto") + ggtitle(titel)  + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1, size = 10), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18)) + coord_cartesian(xlim = ranges3$x, ylim = ranges3$y, expand = TRUE) + ylab(y_lab) + scale_colour_manual(name = "Sequencer", values = cols_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA)))
   }
   output$Proc_dup <- renderPlot({
-    plot_sample_proc("Run", "Duplication","Duplication","Percentage Duplication")
+    plot_sample_proc("Run", "Duplication","Percentage duplication","Percentage Duplication")
   })
   output$Proc_selected <- renderPlot({
     plot_sample_proc("Run","PCT_selected_bases","Percentage selected bases","% selected bases")
   })
   output$Proc_meantarget <- renderPlot({
-    plot_sample_proc("Run", "Mean_target_coverage", "Mean target coverage", "% mean target coverage")
+    plot_sample_proc("Run", "Mean_target_coverage", "Mean target coverage", "Mean target coverage")
   })
   output$Proc_meanbait <- renderPlot({
-    plot_sample_proc("Run", "Mean_bait_coverage", "Mean bait coverage", "% mean bait coverage")
+    plot_sample_proc("Run", "Mean_bait_coverage", "Mean bait coverage", "Mean bait coverage")
   })
   output$Proc_target20X <- renderPlot({
     plot_sample_proc("Run", "PCT_target_bases_20X", "Percentage target bases 20X", "% target bases 20X")
@@ -442,5 +442,4 @@ function(input, output, session){
     }
   })
   
-  session$onSessionEnded(stopApp)
 }

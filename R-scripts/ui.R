@@ -30,7 +30,7 @@ shinyUI(
                              width = 250,
                              format = "dd-mm-yyyy"
               ),
-              uiOutput("sequencer1"),
+              uiOutput("sequencerRun"),
               width = 3
             ),
             mainPanel(
@@ -69,7 +69,7 @@ shinyUI(
                             width = 250,
                             format = "dd-mm-yyyy"
              ),
-             uiOutput("sequencer2"),
+             uiOutput("sequencerLane"),
              uiOutput("lanes"),
              width = 3
               ),
@@ -102,7 +102,7 @@ shinyUI(
                            width = 250,
                            format = "dd-mm-yyyy"
             ),
-            uiOutput("sequencer3"),
+            uiOutput("sequencerProc"),
             width = 3
           ),
           mainPanel(
