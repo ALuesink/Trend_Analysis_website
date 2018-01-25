@@ -220,7 +220,7 @@ function(input, output, session){
     day_max <- as.numeric(input$date_input2[2])
     sub_data <- query_run_lane(x_var, y_var, day_min, day_max)
     sub_data <- subset(sub_data, Sequencer %in% input$sequencer2& Lane %in% input$lanes)
-    ggplot(sub_data, aes_string(x=x_var, y=y_var, group=x_var)) + geom_point(aes(colour = Lane, shape= Sequencer), size=3) + geom_smooth(aes(group = Lane, colour = Lane), method = "auto", se=FALSE)  + scale_colour_manual(name = "Lanes", labels = input$lanes, values = cols_lanes) + scale_shape_manual(name= "Sequencer", values = shape_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA))) + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1, size = 10), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18))+ ylab(y_lab)
+    ggplot(sub_data, aes_string(x=x_var, y=y_var, group=x_var)) + geom_point(aes(colour = Lane, shape= Sequencer), size=3) + geom_smooth(aes(group = Lane, colour = Lane), method = "auto", se=FALSE)  + scale_colour_manual(name = "Lanes", labels = input$lanes, values = cols_lanes) + scale_shape_manual(name= "Sequencer", values = shape_sequencer) + guides(color=guide_legend(override.aes=list(fill=NA))) + theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1, size = 10), axis.text.y = element_text(size=12), axis.title = element_text(size=18), plot.title = element_text(lineheight=.8, face="bold",size = 30), legend.title = element_text(size=20, face="bold"), legend.text = element_text(size=18))+ ylab(y_lab) + ggtitle(titel)
   }
   output$Lane_Q30_line <- renderPlot({
     plot_lane_run("Run", "PCT_Q30_bases", "Percentage \u2265 Q30 per lane", "Percentage \u2265 Q30")
@@ -308,8 +308,8 @@ function(input, output, session){
     brush_xmax <- input$proc_brush$xmax
     brush_ymin <- input$proc_brush$ymin
     brush_ymax <- input$proc_brush$ymax
-    day_min <- as.numeric(input$date_input1[1])
-    day_max <- as.numeric(input$date_input1[2])
+    day_min <- as.numeric(input$date_input3[1])
+    day_max <- as.numeric(input$date_input3[2])
     sub_data <- query_sample_proc(x_var,y_var,day_min,day_max)
     sub_data <- subset(sub_data, Sequencer %in% input$sequencer3)
     if(y_var == "Number_variants"){
