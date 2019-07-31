@@ -7,11 +7,11 @@ library(RMySQL)
 
 function(input, output, session){
   # options(shiny.sanitize.errors = TRUE)
-  sequencers <- c("hiseq_umc01", "nextseq_umc01", "nextseq_umc02", "novaseq_umc01")
+  sequencers <- c("hiseq_umc01", "nextseq_umc01", "nextseq_umc02", "novaseq_umc01", "pmc_novaseq_umc01")
   lanes <- c("1", "2", "3", "4")
-  cols_sequencer <- c("hiseq_umc01"="#009E73", "nextseq_umc01"="#0072B2", "nextseq_umc02"="#D55E00", "novaseq_umc01"="#D4AC0D")
+  cols_sequencer <- c("hiseq_umc01"="#009E73", "nextseq_umc01"="#0072B2", "nextseq_umc02"="#D55E00", "novaseq_umc01"="#D4AC0D", "pmc_novaseq_umc01"="#D4AC0D")
   cols_lanes <- c("1"="darkred", "2"="darkgoldenrod2", "3"="navyblue", "4"="cyan3")
-  shape_sequencer <- c("hiseq_umc01"=15, "nextseq_umc01"=19, "nextseq_umc02"=18, "novaseq_umc01"=17)
+  shape_sequencer <- c("hiseq_umc01"=15, "nextseq_umc01"=19, "nextseq_umc02"=18, "novaseq_umc01"=17, "pmc_novaseq_umc01"=17)
   
   # The columns for the data tables and sequencers and lanes for the filters retrieved from the database
   output$Proc_columns <- renderUI({

@@ -1,9 +1,6 @@
 library(shiny)
 library(shinythemes)
 
-sequencers <- c("hiseq_umc01", "nextseq_umc01", "nextseq_umc02", "novaseq_umc01")
-lanes <- c(1,2,3,4)
-
 shinyUI(
   fluidPage(theme = shinytheme("flatly"),
     tags$head(
