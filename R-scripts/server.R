@@ -372,7 +372,6 @@ function(input, output, session){
   })
   output$processed_table <- DT::renderDataTable({
     data <- query_processed_table("Sample_Processed.*")
-    # data <- query_processed_table("Sample_name,Total_number_of_reads,Percentage_reads_mapped,Total_reads,PF_reads,PF_unique_reads,PCT_PF_reads,PCT_PF_UQ_reads,PCT_UQ_reads_aligned,PCT_PF_UQ_reads_aligned,PF_UQ_bases_aligned,On_bait_bases,Near_bait_bases,Off_bait_bases,On_target_bases,PCT_selected_bases,PCT_off_bait,On_bait_vs_selected,Mean_bait_coverage,Mean_target_coverage,PCT_usable_bases_on_bait,PCT_usable_bases_on_target,Fold_enrichment,Zero_CVG_targets_PCT,Fold_80_base_penalty,PCT_target_bases_2X,PCT_target_bases_10X,PCT_target_bases_20X,PCT_target_bases_30X,PCT_target_bases_40X,PCT_target_bases_50X,PCT_target_bases_100X,HS_library_size,HS_penalty_10X,HS_penalty_20X,HS_penalty_30X,HS_penalty_40X,HS_penalty_50X,HS_penalty_100X,AT_dropout,GC_dropout,Duplication,Number_variants,(dbSNP_variants / Number_variants)*100 AS 'PCT_dbSNP_variants' , (PASS_variants / Number_variants)*100 AS 'PCT_PASS_variants'")
     data <- data[, input$columns_processed, drop=FALSE]
     options = list(autoWidth=FALSE)
     DT::datatable(data,filter = 'top', rownames = FALSE, extensions = 'FixedHeader', options = list(fixedHeader = TRUE))
@@ -403,7 +402,7 @@ function(input, output, session){
     },
     content = function(file){
       data_filter = input$processed_table_rows_all
-      write.csv(query_processed_table("Sample_name,Total_number_of_reads,Percentage_reads_mapped,Total_reads,PF_reads,PF_unique_reads,PCT_PF_reads,PCT_PF_UQ_reads,PCT_UQ_reads_aligned,PCT_PF_UQ_reads_aligned,PF_UQ_bases_aligned,On_bait_bases,Near_bait_bases,Off_bait_bases,On_target_bases,PCT_selected_bases,PCT_off_bait,On_bait_vs_selected,Mean_bait_coverage,Mean_target_coverage,PCT_usable_bases_on_bait,PCT_usable_bases_on_target,Fold_enrichment,Zero_CVG_targets_PCT,Fold_80_base_penalty,PCT_target_bases_2X,PCT_target_bases_10X,PCT_target_bases_20X,PCT_target_bases_30X,PCT_target_bases_40X,PCT_target_bases_50X,PCT_target_bases_100X,HS_library_size,HS_penalty_10X,HS_penalty_20X,HS_penalty_30X,HS_penalty_40X,HS_penalty_50X,HS_penalty_100X,AT_dropout,GC_dropout,Duplication,Number_variants,PCT_dbSNP_variants,PCT_PASS_variants")[data_filter, input$columns_processed,drop=FALSE],file,row.names = FALSE)
+      write.csv(query_processed_table("Sample_name,Total_number_of_reads,Percentage_reads_mapped,Total_reads,PF_reads,PF_unique_reads,PCT_PF_reads,PCT_PF_UQ_reads,PF_UQ_reads_aligned,PCT_PF_UQ_reads_aligned,PF_UQ_bases_aligned,On_bait_bases,Near_bait_bases,Off_bait_bases,On_target_bases,PCT_selected_bases,PCT_off_bait,On_bait_vs_selected,Mean_bait_coverage,Mean_target_coverage,PCT_usable_bases_on_bait,PCT_usable_bases_on_target,Fold_enrichment,Zero_CVG_targets_PCT,Fold_80_base_penalty,PCT_target_bases_2X,PCT_target_bases_10X,PCT_target_bases_20X,PCT_target_bases_30X,PCT_target_bases_40X,PCT_target_bases_50X,PCT_target_bases_100X,HS_library_size,HS_penalty_10X,HS_penalty_20X,HS_penalty_30X,HS_penalty_40X,HS_penalty_50X,HS_penalty_100X,AT_dropout,GC_dropout,Duplication,Number_variants,Bait_ID,dbSNP_variants,PASS_variants")[data_filter, input$columns_processed,drop=FALSE],file,row.names = FALSE)
     }
   )
   
