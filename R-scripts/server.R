@@ -12,10 +12,14 @@ function(input, output, session){
   cols_sequencer <- c("hiseq_umc01"="#009E73", "nextseq_umc01"="#0072B2", "nextseq_umc02"="#D55E00", "novaseq_umc01"="#D4AC0D", "pmc_novaseq_umc01"="#D4AC0D")
   cols_lanes <- c("1"="darkred", "2"="darkgoldenrod2", "3"="navyblue", "4"="cyan3")
   shape_sequencer <- c("hiseq_umc01"=15, "nextseq_umc01"=19, "nextseq_umc02"=18, "novaseq_umc01"=17, "pmc_novaseq_umc01"=17)
+ 
+  createDBConnection <- function(){
+    dbConnect(RMySQL::MySQL(), group="trendngs", default.file='./.my.cnf')
+  }
   
   # The columns for the data tables and sequencers and lanes for the filters retrieved from the database
   output$Proc_columns <- renderUI({
-    con <- dbConnect(RMySQL::MySQL(), group="trendngs")
+    con <- createDBConnection()
     res <- suppressWarnings(dbSendQuery(con, "SELECT Run.Run, Run.Sequencer, Sample_Processed.* FROM Run JOIN Sample_Processed ON Run.Run_ID = Sample_Processed.Run_ID LIMIT 1"))
     columns <- dbListFields(res)
     dbClearResult(res)
@@ -29,7 +33,7 @@ function(input, output, session){
     checkboxGroupInput("columns_processed", "Columns", kolomn,selected = kolomn[1:length(kolomn)])
   })
   output$Samp_columns <- renderUI({
-    con <- dbConnect(RMySQL::MySQL(), group="trendngs")
+    con <- createDBConnection()
     res <- suppressWarnings(dbSendQuery(con, "SELECT Run.Run, Run.Sequencer, Sample_Sequencer.* FROM Run JOIN Sample_Sequencer ON Run.Run_ID = Sample_Sequencer.Run_ID LIMIT 1"))
     columns <- dbListFields(res)
     dbClearResult(res)
@@ -43,7 +47,7 @@ function(input, output, session){
     checkboxGroupInput("columns_sample", "Columns", kolomn, selected = kolomn[1:length(kolomn)])
   })
   output$Lane_columns <- renderUI({
-    con <- dbConnect(RMySQL::MySQL(), group="trendngs")
+    con <- createDBConnection()
     res <- suppressWarnings(dbSendQuery(con, "SELECT Run.Run, Run.Sequencer, Run_per_Lane.* FROM Run JOIN Run_per_Lane ON Run.Run_ID = Run_per_Lane.Run_ID LIMIT 1"))
     columns <- dbListFields(res)
     dbClearResult(res)
@@ -71,7 +75,7 @@ function(input, output, session){
   
   # Connection to the database to retrieve data, input is the x and y value and the minimal and maximal date
   query_sample_seq <- function(x, y, date_min, date_max){
-    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    con <- createDBConnection()
     query = sprintf("SELECT %s, %s, Sequencer, asDate FROM Run JOIN Sample_Sequencer ON Run.Run_ID = Sample_Sequencer.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x, y, date_min, date_max)
     response <- dbSendQuery(con, query)
     results <- dbFetch(response,n=-1)
@@ -80,7 +84,7 @@ function(input, output, session){
     return(results)
   }
   query_run_lane <- function(x, y, date_min, date_max){
-    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    con <- createDBConnection()
     query <- sprintf("SELECT %s, %s, Sequencer, Lane FROM Run JOIN Run_per_Lane ON Run.Run_ID = Run_per_Lane.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x, y, date_min, date_max)
     response <- dbSendQuery(con, query)
     results <- dbFetch(response, n=-1)
@@ -89,7 +93,7 @@ function(input, output, session){
     return(results)
   }
   query_sample_proc <- function(x, y, date_min, date_max){
-    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    con <- createDBConnection()
     query <- sprintf("SELECT %s, %s, Sequencer FROM Run JOIN Sample_Processed ON Run.Run_ID = Sample_Processed.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x, y, date_min, date_max)
     response <- dbSendQuery(con, query)
     results <- dbFetch(response, n=-1)
@@ -98,7 +102,7 @@ function(input, output, session){
     return(results)
   }
   query_run <- function(x, y, date_min, date_max){
-    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    con <- createDBConnection()
     query <- sprintf("SELECT %s, %s, Sequencer FROM Run WHERE asDate BETWEEN %s AND %s", x, y, date_min, date_max)
     response <- dbSendQuery(con, query)
     results <- dbFetch(response, n=-1)
@@ -108,7 +112,7 @@ function(input, output, session){
   }
   # Connection to the database to retrieve data and calculate values, input: a and b are the math values, x value and y value, minimal and maximal date
   query_math <- function(a,b,x,y,date_min,date_max){
-    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    con <- createDBConnection()
     query = sprintf("SELECT %s, (%s / %s)*100 AS '%s', Sequencer FROM Run JOIN Sample_Processed ON Run.Run_ID = Sample_Processed.Run_ID AND (Run.asDate BETWEEN %s AND %s)", x,a,b,y,date_min,date_max )
     response <- dbSendQuery(con, query)
     results <- dbFetch(response, n=-1)
@@ -120,7 +124,7 @@ function(input, output, session){
   
   # Retrieve data for the data tables, with only the columns selected
   query_run_table <- function(columns){
-    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    con <- createDBConnection()
     query <- sprintf("SELECT Run, %s, Sequencer FROM Run JOIN Sample_Sequencer ON Run.Run_ID = Sample_Sequencer.Run_ID",columns)
     response <- dbSendQuery(con, query)
     results <- dbFetch(response, n=-1)
@@ -129,7 +133,7 @@ function(input, output, session){
     return(results)
   }
   query_lane_table <- function(columns){
-    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    con <- createDBConnection()
     query <- sprintf("SELECT Run, %s, Sequencer FROM Run JOIN Run_per_Lane ON Run.Run_ID = Run_per_Lane.Run_ID",columns)
     response <- dbSendQuery(con, query)
     results <- dbFetch(response, n=-1)
@@ -138,7 +142,7 @@ function(input, output, session){
     return(results)
   }
   query_processed_table <- function(columns){
-    con <- dbConnect(RMariaDB::MariaDB(), group="trendngs")
+    con <- createDBConnection()
     query <- sprintf("SELECT Run.Run, %s, Sequencer FROM Run JOIN Sample_Processed ON Run.Run_ID = Sample_Processed.Run_ID", columns)
     response <- dbSendQuery(con, query)
     results <- dbFetch(response, n=-1)
